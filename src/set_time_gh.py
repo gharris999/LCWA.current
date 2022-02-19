@@ -143,4 +143,4 @@ if __name__ == '__main__':
 
     MT = MyTime()
     if MT.GetTime():                # WGH Mod
-        MT.SetStart('miska')
+        MT.SetStart('LC05')        # WGH Mod

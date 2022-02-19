@@ -336,6 +336,9 @@ class test_speed1():
         """
         this method deals with arguments parsed
         """
+
+        print(os.path.basename(__file__), sys.argv[1:], '\n\n\n')       # WGH mod: Debugging -- show what cmdline args we're dealing with..
+
         #instantiate the parser
         parser = argp.ArgumentParser(
             prog='test_speed1',

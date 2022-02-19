@@ -24,7 +24,7 @@ class MyConfig():
         if os.path.exists(config_file) :
             self.ReadJson(config_file)
         else:
-            print(" Config file does not exist, exiting     ", config_file)
+            print("Config file %s does not exist, exiting." % config_file)  # WGH mod: nit-picky output aesthetics
             sys.exit(0)
     def ReadJson(self,file_path):
 
@@ -61,93 +61,95 @@ class MyConfig():
     # first we determine if we are running iperf or speedtest
     # this depends on the ClusterControl entry
 
-        self.runmode = self.GetClusterVariables(jsondict)
+        try:                                                            # WGH mod: Allow for hostnames that aren't defined for ClusterControl
+            self.runmode = self.GetClusterVariables(jsondict)
 
-        if(self.runmode == 'Iperf'):
-            self.iperf_serverip = jsondict["Iperf"]["iperf_serverip"]
-            self.iperf_serverport = jsondict["Iperf"]["iperf_serverport"]
-            self.iperf_numstreams = jsondict["Iperf"]["iperf_numstreams"]
-            self.iperf_blksize = jsondict["Iperf"]["iperf_blksize"]
-            self.iperf_duration = jsondict["Iperf"]["iperf_duration"]
-            self.latency_ip = jsondict["Iperf"]["iperf_latency_ip"]
-            self.time_window =      jsondict["Iperf"]["iperf_time_window"]
+            if(self.runmode == 'Iperf'):
+                self.iperf_serverip = jsondict["Iperf"]["iperf_serverip"]
+                self.iperf_serverport = jsondict["Iperf"]["iperf_serverport"]
+                self.iperf_numstreams = jsondict["Iperf"]["iperf_numstreams"]
+                self.iperf_blksize = jsondict["Iperf"]["iperf_blksize"]
+                self.iperf_duration = jsondict["Iperf"]["iperf_duration"]
+                self.latency_ip = jsondict["Iperf"]["iperf_latency_ip"]
+                self.time_window =      jsondict["Iperf"]["iperf_time_window"]
 
-            if(jsondict["Iperf"]["iperf_reverse"]== True):
-                self.iperf_reverse = True
+                if(jsondict["Iperf"]["iperf_reverse"]== True):
+                    self.iperf_reverse = True
+                else:
+                    self.iperf_reverse =  False
+
+                
+            elif (self.runmode == 'Speedtest'):
+                self.latency_ip =       jsondict["Speedtest"]["latency_ip"]
+                self.serverip =         jsondict["Speedtest"]["serverip"]
+                self.serverid =         jsondict["Speedtest"]["serverid"]
+                self.time_window =      jsondict["Speedtest"]["time_window"]
+
+
+
+            elif (self.runmode ==   'Both'):
+                self.iperf_serverip = jsondict["Iperf"]["iperf_serverip"]
+                self.iperf_serverport = jsondict["Iperf"]["iperf_serverport"]
+                self.iperf_numstreams = jsondict["Iperf"]["iperf_numstreams"]
+                self.iperf_blksize = jsondict["Iperf"]["iperf_blksize"]
+                self.iperf_duration = jsondict["Iperf"]["iperf_duration"]
+                self.latency_ip = jsondict["Iperf"]["iperf_latency_ip"]
+                self.time_window =      jsondict["Iperf"]["iperf_time_window"]
+                if(jsondict["Iperf"]["iperf_reverse"]== True):
+                    self.iperf_reverse = True
+                else:
+                    self.iperf_reverse =  False
+                self.latency_ip =       jsondict["Speedtest"]["latency_ip"]
+                self.serverip =         jsondict["Speedtest"]["serverip"]
+                self.serverid =         jsondict["Speedtest"]["serverid"]
+                self.time_window =      jsondict["Speedtest"]["time_window"]
+
+
+
             else:
-                self.iperf_reverse =  False
+                print('that runmode is unknown',jsondict["Control"]['runmode'] )
+                sys.exit()
 
-            
-        elif (self.runmode == 'Speedtest'):
-            self.latency_ip =       jsondict["Speedtest"]["latency_ip"]
-            self.serverip =         jsondict["Speedtest"]["serverip"]
-            self.serverid =         jsondict["Speedtest"]["serverid"]
-            self.time_window =      jsondict["Speedtest"]["time_window"]
+        except:                                                         # WGH mod: Allow for hostnames that aren't defined for ClusterControl
+            # here we check if we have nondefault variables for that host:
+            # if we have nondefault, we replace the values
 
+            if(self.nondefault):
+                if "serverip" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.serverip = jsondict["ClusterControl"][self.host]["nondefault"]["serverip"] 
 
+                if "serverid" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.serverid = jsondict["ClusterControl"][self.host]["nondefault"]["serverid"] 
 
-        elif (self.runmode ==   'Both'):
-            self.iperf_serverip = jsondict["Iperf"]["iperf_serverip"]
-            self.iperf_serverport = jsondict["Iperf"]["iperf_serverport"]
-            self.iperf_numstreams = jsondict["Iperf"]["iperf_numstreams"]
-            self.iperf_blksize = jsondict["Iperf"]["iperf_blksize"]
-            self.iperf_duration = jsondict["Iperf"]["iperf_duration"]
-            self.latency_ip = jsondict["Iperf"]["iperf_latency_ip"]
-            self.time_window =      jsondict["Iperf"]["iperf_time_window"]
-            if(jsondict["Iperf"]["iperf_reverse"]== True):
-                self.iperf_reverse = True
-            else:
-                self.iperf_reverse =  False
-            self.latency_ip =       jsondict["Speedtest"]["latency_ip"]
-            self.serverip =         jsondict["Speedtest"]["serverip"]
-            self.serverid =         jsondict["Speedtest"]["serverid"]
-            self.time_window =      jsondict["Speedtest"]["time_window"]
+                if "latency_ip" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.latency_ip = jsondict["ClusterControl"][self.host]["nondefault"]["latency_ip"] 
 
+                if "time_window" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.time_window = jsondict["ClusterControl"][self.host]["nondefault"]["time_window"] 
 
+     
+                if "random" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.random_click = jsondict["ClusterControl"][self.host]["nondefault"]["random"] 
 
-        else:
-            print('that runmode is unknown',jsondict["Control"]['runmode'] )
-            sys.exit()
+     
+     
+                if "iperf_serverip" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.iperf_serverip = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_serverip"] 
 
-        # here we check if we have nondefault variables for that host:
-        # if we have nondefault, we replace the values
+                if "iperf_serverport" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.iperf_serverport = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_serverport"] 
 
-        if(self.nondefault):
-            if "serverip" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.serverip = jsondict["ClusterControl"][self.host]["nondefault"]["serverip"] 
+                if "iperf_duration" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.iperf_duration = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_duration"] 
 
-            if "serverid" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.serverid = jsondict["ClusterControl"][self.host]["nondefault"]["serverid"] 
+                if "iperf_blksize" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.iperf_blksize = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_blksize"] 
 
-            if "latency_ip" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.latency_ip = jsondict["ClusterControl"][self.host]["nondefault"]["latency_ip"] 
+                if "iperf_numstreams" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.iperf_numstreams = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_numstreams"] 
 
-            if "time_window" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.time_window = jsondict["ClusterControl"][self.host]["nondefault"]["time_window"] 
-
- 
-            if "random" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.random_click = jsondict["ClusterControl"][self.host]["nondefault"]["random"] 
-
- 
- 
-            if "iperf_serverip" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.iperf_serverip = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_serverip"] 
-
-            if "iperf_serverport" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.iperf_serverport = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_serverport"] 
-
-            if "iperf_duration" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.iperf_duration = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_duration"] 
-
-            if "iperf_blksize" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.iperf_blksize = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_blksize"] 
-
-            if "iperf_numstreams" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.iperf_numstreams = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_numstreams"] 
-
-            if "iperf_reverse" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
-                self.iperf_reverse = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_reverse"] 
+                if "iperf_reverse" in jsondict["ClusterControl"][self.host]["nondefault"].keys() :
+                    self.iperf_reverse = jsondict["ClusterControl"][self.host]["nondefault"]["iperf_reverse"] 
 
 
 
@@ -202,7 +204,10 @@ class MyConfig():
 
         # get hostname
         test_key ='nondefault'
-        self.host = host = socket.gethostname()
+        if ( socket.gethostname()[0:2] == 'LC' ):                       # WGH mod: allows for hostnames like "LC05Speedbox" to get the correct ClusterControl block
+            self.host = host = socket.gethostname()[0:4]
+        else:
+            self.host = host = socket.gethostname()
         if host in jsondict["ClusterControl"].keys():
             print(jsondict["ClusterControl"][host])
             #check if we have nondefault values:
